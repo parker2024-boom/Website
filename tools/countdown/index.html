@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>快速倒计时 · Quick Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            padding: 15px;
+            padding-top: env(safe-area-inset-top, 15px);
+            padding-bottom: env(safe-area-inset-bottom, 15px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
+            background: #e0e0e0;
+            color: #333;
+            padding: 10px 18px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .back-btn:hover, .back-btn:active {
+            background: #d0d0d0;
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px 12px;
+            color: #666;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .settings-btn:hover {
+            color: #333;
+        }
+
+        .settings-btn .icon {
+            font-size: 22px;
+            transition: transform 0.3s;
+        }
+
+        .settings-btn:hover .icon {
+            transform: rotate(90deg);
+        }
+
+        /* 时间显示区域 */
+        .display-section {
+            text-align: center;
+            padding: 25px 15px;
+            margin-bottom: 15px;
+        }
+
+        .time-display {
+            font-size: clamp(3.5rem, 15vw, 5rem);
+            font-weight: 700;
+            color: #222;
+            font-family: 'Segoe UI', 'Courier New', monospace;
+            letter-spacing: 3px;
+            transition: color 0.3s;
+        }
+
+        .time-display.finished {
+            color: #e53935;
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.03); }
+        }
+
+        .status-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        .end-time {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+            min-height: 16px;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background: #4caf50;
+            transition: width 0.3s ease, background 0.5s ease;
+            border-radius: 6px;
+        }
+
+        .progress-bar.yellow {
+            background: #ffb300;
+        }
+
+        .progress-bar.red {
+            background: #e53935;
+        }
+
+        /* 预设按钮网格 */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 18px 10px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            line-height: 1.3;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .preset-btn:active {
+            transform: scale(0.96);
+        }
+
+        .preset-btn:nth-child(1) { background: #FFB3BA; }
+        .preset-btn:nth-child(2) { background: #FFDFBA; }
+        .preset-btn:nth-child(3) { background: #FFFFBA; }
+        .preset-btn:nth-child(4) { background: #BAFFC9; }
+        .preset-btn:nth-child(5) { background: #BAE1FF; }
+        .preset-btn:nth-child(6) { background: #E0BBFF; }
+
+        .preset-btn .key-hint {
+            font-size: 11px;
+            color: #666;
+            display: block;
+            margin-top: 3px;
+        }
+
+        /* 控制按钮 */
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .test-btn {
+            padding: 14px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .test-btn:active {
+            background: #f0f0f0;
+        }
+
+        .stop-btn {
+            padding: 16px;
+            background: #ff6666;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .stop-btn:active {
+            background: #ff4d4d;
+        }
+
+        /* 设置弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .modal p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .setting-row label {
+            min-width: 70px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .setting-row input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .setting-row span {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-save {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        /* 确认弹窗 */
+        .confirm-modal .modal {
+            text-align: center;
+        }
+
+        .confirm-modal h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* 响应式 - 大屏幕 */
+        @media (min-width: 600px) {
+            body {
+                max-width: 500px;
+                margin: 0 auto;
+                padding: 30px;
+            }
+
+            .preset-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .preset-btn {
+                padding: 22px 15px;
+                font-size: 17px;
+            }
+        }
+
+        /* 横屏适配 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .display-section {
+                padding: 15px;
+            }
+
+            .time-display {
+                font-size: 3rem;
+            }
+
+            .preset-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .preset-btn {
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../../index.html" class="back-btn">← 返回首页</a>
+        <button class="settings-btn" onclick="openSettings()"><span class="icon">⚙️</span>设置</button>
+    </div>
+
+    <div class="display-section">
+        <div class="time-display" id="timeDisplay">00:00</div>
+        <div class="status-text" id="statusText">请选择一个倒计时<br>Please select a countdown</div>
+        <div class="end-time" id="endTime"></div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="preset-grid" id="presetGrid">
+        <!-- 预设按钮由JS生成 -->
+    </div>
+
+    <div class="control-section">
+        <button class="test-btn" onclick="startCountdown(5/60)">测试 5 秒 / 5 sec</button>
+        <button class="stop-btn" onclick="stopAll()">停止 Stop</button>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <h2>按键时间设置 · Preset durations</h2>
+            <p>请设置 6 个快捷倒计时时长（单位：分钟，支持小数如 0.5 或分数如 1/2）<br>
+            Please set the six quick countdown durations (unit: minutes)</p>
+            <div id="settingsInputs">
+                <!-- 由JS生成 -->
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeSettings()">取消 Cancel</button>
+                <button class="btn-save" onclick="saveSettings()">保存 Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="modal-overlay confirm-modal" id="confirmModal">
+        <div class="modal">
+            <h3>已有倒计时在进行<br>A countdown is already running</h3>
+            <p>是否停止当前倒计时，并启动新的倒计时？<br>
+            Do you want to stop the current countdown and start a new one?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeConfirm(false)">取消 [Esc]<br>Cancel</button>
+                <button class="btn-save" onclick="closeConfirm(true)">停止并启动 [Enter]<br>Stop & Start</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========= 状态变量 =========
+        let presetMinutes = [1, 2, 3, 5, 10, 15];
+        let timerRunning = false;
+        let remainingSeconds = 0;
+        let totalSeconds = 0;
+        let timerId = null;
+        let endTimeStr = '';
+
+        // 声音相关
+        let audioContext = null;
+        let alarmLoop = false;
+        let alarmTimeoutId = null;
+
+        const STORAGE_KEY = 'quick_timer_settings';
+
+        // ========= 初始化 =========
+        function init() {
+            loadSettings();
+            renderPresetButtons();
+            updateDisplay();
+
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                // 如果有弹窗打开，处理弹窗快捷键
+                const settingsOpen = document.getElementById('settingsModal').classList.contains('show');
+                const confirmOpen = document.getElementById('confirmModal').classList.contains('show');
+
+                if (confirmOpen) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        closeConfirm(true);
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeConfirm(false);
+                    }
+                    return;
+                }
+
+                if (settingsOpen) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeSettings();
+                    }
+                    return; // 设置弹窗打开时不响应其他快捷键
+                }
+
+                // 正常快捷键 1-6
+                const key = parseInt(e.key);
+                if (key >= 1 && key <= 6) {
+                    startCountdown(presetMinutes[key - 1]);
+                }
+                if (e.key === 'Escape' || e.key === ' ') {
+                    stopAll();
+                }
+            });
+
+            // 移动端：点击屏幕时初始化音频上下文（iOS需要用户交互）
+            document.addEventListener('touchstart', initAudioContext, { once: true });
+            document.addEventListener('click', initAudioContext, { once: true });
+        }
+
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // ========= 设置加载/保存 =========
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (Array.isArray(data) && data.length === 6 && data.every(x => typeof x === 'number' && x > 0)) {
+                        presetMinutes = data;
+                    }
+                }
+            } catch (e) {
+                console.log('加载设置失败', e);
+            }
+        }
+
+        function saveSettingsToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(presetMinutes));
+            } catch (e) {
+                console.log('保存设置失败', e);
+            }
+        }
+
+        // ========= 渲染预设按钮 =========
+        function renderPresetButtons() {
+            const grid = document.getElementById('presetGrid');
+            grid.innerHTML = '';
+
+            presetMinutes.forEach((minutes, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'preset-btn';
+                btn.onclick = () => startCountdown(minutes);
+
+                // 格式化显示
+                let displayText;
+                if (minutes >= 1) {
+                    displayText = minutes === Math.floor(minutes) ? `${minutes} min` : `${minutes.toFixed(1)} min`;
+                } else {
+                    displayText = `${Math.round(minutes * 60)} sec`;
+                }
+
+                btn.innerHTML = `${displayText}<span class="key-hint">按键 ${index + 1}</span>`;
+                grid.appendChild(btn);
+            });
+        }
+
+        // ========= 时间显示 =========
+        function updateDisplay() {
+            const mm = Math.floor(remainingSeconds / 60);
+            const ss = remainingSeconds % 60;
+            const timeStr = String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+
+            const display = document.getElementById('timeDisplay');
+            display.textContent = timeStr;
+
+            // 更新进度条
+            const progressBar = document.getElementById('progressBar');
+            if (totalSeconds > 0) {
+                const percent = Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100));
+                progressBar.style.width = percent + '%';
+
+                // 颜色变化
+                progressBar.classList.remove('yellow', 'red');
+                if (percent <= 20) {
+                    progressBar.classList.add('red');
+                } else if (percent <= 50) {
+                    progressBar.classList.add('yellow');
+                }
+            } else {
+                progressBar.style.width = '100%';
+                progressBar.classList.remove('yellow', 'red');
+            }
+        }
+
+        // ========= 倒计时逻辑 =========
+        let pendingMinutes = null;
+        let confirmCallback = null;
+
+        function startCountdown(minutes) {
+            // 先停止声音
+            stopAlarm();
+
+            if (timerRunning) {
+                // 显示确认弹窗
+                pendingMinutes = minutes;
+                document.getElementById('confirmModal').classList.add('show');
+                return;
+            }
+
+            doStartCountdown(minutes);
+        }
+
+        function closeConfirm(confirmed) {
+            document.getElementById('confirmModal').classList.remove('show');
+            if (confirmed && pendingMinutes !== null) {
+                stopTimer();
+                doStartCountdown(pendingMinutes);
+            }
+            pendingMinutes = null;
+        }
+
+        function doStartCountdown(minutes) {
+            totalSeconds = Math.max(1, Math.round(minutes * 60));
+            remainingSeconds = totalSeconds;
+            timerRunning = true;
+
+            // 计算预计结束时间
+            const endTime = new Date(Date.now() + remainingSeconds * 1000);
+            endTimeStr = endTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('statusText').innerHTML = '正在倒计时…<br>Counting down…';
+            document.getElementById('endTime').textContent = `预计结束 ${endTimeStr}`;
+            document.getElementById('timeDisplay').classList.remove('finished');
+
+            updateDisplay();
+            scheduleTick();
+        }
+
+        function scheduleTick() {
+            if (!timerRunning) return;
+            timerId = setTimeout(tick, 1000);
+        }
+
+        function tick() {
+            if (!timerRunning) return;
+
+            remainingSeconds--;
+            if (remainingSeconds <= 0) {
+                remainingSeconds = 0;
+                updateDisplay();
+                onTimerFinished();
+            } else {
+                updateDisplay();
+                scheduleTick();
+            }
+        }
+
+        function stopTimer() {
+            timerRunning = false;
+            if (timerId) {
+                clearTimeout(timerId);
+                timerId = null;
+            }
+        }
+
+        function onTimerFinished() {
+            timerRunning = false;
+            timerId = null;
+
+            document.getElementById('statusText').innerHTML = '⏰ 时间到！<br>Time\'s up!';
+            document.getElementById('endTime').textContent = '';
+            document.getElementById('timeDisplay').classList.add('finished');
+
+            // 开始循环播放声音
+            playAlarm();
+        }
+
+        // ========= 停止所有 =========
+        function stopAll() {
+            stopTimer();
+            stopAlarm();
+            resetToIdle();
+        }
+
+        function resetToIdle() {
+            remainingSeconds = 0;
+            totalSeconds = 0;
+            endTimeStr = '';
+
+            document.getElementById('timeDisplay').textContent = '00:00';
+            document.getElementById('timeDisplay').classList.remove('finished');
+            document.getElementById('statusText').innerHTML = '请选择一个倒计时<br>Please select a countdown';
+            document.getElementById('endTime').textContent = '';
+
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('yellow', 'red');
+        }
+
+        // ========= 声音相关 =========
+        function playAlarm() {
+            stopAlarm();
+            alarmLoop = true;
+            alarmTick();
+        }
+
+        function alarmTick() {
+            if (!alarmLoop) return;
+
+            // 播放一次提示音
+            playBeep();
+
+            // 每2.5秒响一次
+            alarmTimeoutId = setTimeout(alarmTick, 2500);
+        }
+
+        function stopAlarm() {
+            alarmLoop = false;
+            if (alarmTimeoutId) {
+                clearTimeout(alarmTimeoutId);
+                alarmTimeoutId = null;
+            }
+        }
+
+        function playBeep() {
+            initAudioContext();
+            if (!audioContext) return;
+
+            try {
+                // 如果音频上下文被暂停，恢复它
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                // 传统"滴滴滴滴-滴滴滴滴-"节奏
+                // 4声短促 + 停顿 + 4声短促
+                const beepDuration = 0.08;  // 每声持续时间
+                const beepGap = 0.12;       // 声音间隔
+                const groupGap = 0.3;       // 两组之间的停顿
+                const frequency = 1000;     // 频率（Hz）
+
+                function playOneBeep(startTime) {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'square'; // 方波，更像传统蜂鸣器
+
+                    gainNode.gain.setValueAtTime(0.3, startTime);
+                    gainNode.gain.setValueAtTime(0, startTime + beepDuration);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + beepDuration);
+                }
+
+                const now = audioContext.currentTime;
+                
+                // 第一组：滴滴滴滴
+                for (let i = 0; i < 4; i++) {
+                    playOneBeep(now + i * beepGap);
+                }
+                
+                // 第二组：滴滴滴滴（间隔后）
+                const secondGroupStart = 4 * beepGap + groupGap;
+                for (let i = 0; i < 4; i++) {
+                    playOneBeep(now + secondGroupStart + i * beepGap);
+                }
+
+            } catch (e) {
+                console.log('播放声音失败', e);
+            }
+        }
+
+        // ========= 设置弹窗 =========
+        function openSettings() {
+            const container = document.getElementById('settingsInputs');
+            container.innerHTML = '';
+
+            presetMinutes.forEach((minutes, index) => {
+                const row = document.createElement('div');
+                row.className = 'setting-row';
+
+                // 格式化显示值
+                let displayVal = minutes === Math.floor(minutes) ? String(minutes) : minutes.toFixed(2).replace(/\.?0+$/, '');
+
+                row.innerHTML = `
+                    <label>按键 ${index + 1}：</label>
+                    <input type="text" id="setting_${index}" value="${displayVal}">
+                    <span>分钟</span>
+                `;
+                container.appendChild(row);
+            });
+
+            document.getElementById('settingsModal').classList.add('show');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        function parseMinutes(str) {
+            str = str.trim();
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length === 2) {
+                    return parseFloat(parts[0]) / parseFloat(parts[1]);
+                }
+            }
+            return parseFloat(str);
+        }
+
+        function saveSettings() {
+            const newValues = [];
+
+            for (let i = 0; i < 6; i++) {
+                const input = document.getElementById(`setting_${i}`);
+                const val = parseMinutes(input.value);
+
+                if (isNaN(val) || val <= 0) {
+                    alert('请输入大于 0 的分钟数（支持小数如 0.5 或分数如 1/2）\nPlease enter a value > 0');
+                    return;
+                }
+                newValues.push(val);
+            }
+
+            presetMinutes = newValues;
+            saveSettingsToStorage();
+            renderPresetButtons();
+            closeSettings();
+
+            alert('已保存按键时间设置\nPreset durations have been saved');
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

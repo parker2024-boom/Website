@@ -1,20 +1,229 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>与孩子共同成长</title>
-  </head>
-  <body>
-    <h1>游戏</h1>
-    <h2>养成游戏</h2>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <a href="PVZ/PVZ.html">
-      <img src="PVZ/images/peashooter.gif" alt="Peashooter">
-    </a>
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
 
-    <p>
-      <a href="PVZ/PVZ.html">植物大战僵尸</a>
-    </p>
-  </body>
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 217, 255, 0.3);
+        }
+
+        .header p {
+            color: #8892b0;
+            font-size: 1.1em;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .category {
+            margin-bottom: 50px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .category-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .category-title {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .category-tools .category-title {
+            color: #00d9ff;
+        }
+
+        .category-games .category-title {
+            color: #ff6b6b;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+        }
+
+        .card-icon img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            color: #8892b0;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .card-tools {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 255, 136, 0.1) 100%);
+        }
+
+        .card-tools:hover {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.2) 0%, rgba(0, 255, 136, 0.2) 100%);
+            border-color: rgba(0, 217, 255, 0.5);
+        }
+
+        .card-games {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 159, 67, 0.1) 100%);
+        }
+
+        .card-games:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 159, 67, 0.2) 100%);
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #5a6a8a;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .category-title {
+                font-size: 1.4em;
+            }
+            
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🌟 与孩子共同成长</h1>
+        <p>探索、学习、玩耍</p>
+    </header>
+
+    <div class="container">
+        <!-- 工具类 -->
+        <section class="category category-tools">
+            <div class="category-header">
+                <span class="category-icon">🛠️</span>
+                <h2 class="category-title">工具类</h2>
+            </div>
+            <div class="cards">
+                <a href="tools/countdown/index.html" class="card card-tools">
+                    <div class="card-icon">⏱️</div>
+                    <h3 class="card-title">倒计时</h3>
+                    <p class="card-desc">设置倒计时，管理时间，提高效率</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- 娱乐类 -->
+        <section class="category category-games">
+            <div class="category-header">
+                <span class="category-icon">🎮</span>
+                <h2 class="category-title">娱乐类</h2>
+            </div>
+            <div class="cards">
+                <a href="PVZ/PVZ.html" class="card card-games">
+                    <div class="card-icon">
+                        <img src="PVZ/images/peashooter.gif" alt="豌豆射手">
+                    </div>
+                    <h3 class="card-title">植物大战僵尸</h3>
+                    <p class="card-desc">经典塔防游戏，用植物保卫家园</p>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>💖 与孩子一起探索世界</p>
+    </footer>
+</body>
 </html>
