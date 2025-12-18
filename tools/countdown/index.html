@@ -745,6 +745,12 @@
             timerRunning = false;
             timerId = null;
 
+            // 停止所有正在播放的特殊声音（猫叫/鸟叫）
+            if (audioCat) { audioCat.pause(); audioCat.currentTime = 0; }
+            if (audioBird) { audioBird.pause(); audioBird.currentTime = 0; }
+            if (audioBeep) { audioBeep.pause(); audioBeep.currentTime = 0; }
+            isPlayingSpecialSound = false;
+
             document.getElementById('statusText').innerHTML = '⏰ 时间到！<br>Time\'s up!';
             document.getElementById('endTime').textContent = '';
             document.getElementById('timeDisplay').classList.add('finished');
