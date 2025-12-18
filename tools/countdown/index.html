@@ -583,9 +583,13 @@
         }
 
         function doStartCountdown(minutes) {
+            // 开始时初始化音频上下文
+            initAudioContext();
+            
             totalSeconds = Math.max(1, Math.round(minutes * 60));
             remainingSeconds = totalSeconds;
             timerRunning = true;
+            lastPlayedPercent = 100; // 重置百分比记录
 
             // 计算预计结束时间
             const endTime = new Date(Date.now() + remainingSeconds * 1000);
@@ -608,6 +612,10 @@
             if (!timerRunning) return;
 
             remainingSeconds--;
+            
+            // 检查是否需要播放声音提示
+            checkAndPlaySound();
+            
             if (remainingSeconds <= 0) {
                 remainingSeconds = 0;
                 updateDisplay();
@@ -616,6 +624,58 @@
                 updateDisplay();
                 scheduleTick();
             }
+        }
+
+        // 检查并播放声音提示
+        let lastBeepTime = 0; // 记录上次Beep的时间戳
+        
+        function checkAndPlaySound() {
+            // 剩余20秒时播放鸟叫
+            if (remainingSeconds === 20 && totalSeconds > 20) {
+                playSpecialSound(audioBird);
+                return;
+            }
+            
+            // 剩余10秒时播放猫叫
+            if (remainingSeconds === 10 && totalSeconds > 10) {
+                playSpecialSound(audioCat);
+                return;
+            }
+            
+            // 每少10%时播放Beep（除非正在播放其他声音）
+            // 条件：总时间>=30秒 且 距离上次Beep至少10秒
+            if (totalSeconds >= 30 && !isPlayingSpecialSound) {
+                const currentPercent = Math.floor((remainingSeconds / totalSeconds) * 100);
+                const targetPercent = Math.floor(lastPlayedPercent / 10) * 10 - 10;
+                const now = Date.now();
+                const timeSinceLastBeep = (now - lastBeepTime) / 1000;
+                
+                if (currentPercent <= targetPercent && targetPercent >= 0 && timeSinceLastBeep >= 10) {
+                    lastPlayedPercent = targetPercent;
+                    lastBeepTime = now;
+                    playBeepOnce();
+                }
+            }
+        }
+
+        // 播放特殊声音（猫叫/鸟叫）
+        function playSpecialSound(audio) {
+            if (!audio) return;
+            isPlayingSpecialSound = true;
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('播放失败', e));
+            
+            // 声音播放完毕后重置标志
+            audio.onended = () => {
+                isPlayingSpecialSound = false;
+            };
+        }
+
+        // 播放一次Beep
+        function playBeepOnce() {
+            if (!audioBeep) return;
+            audioBeep.currentTime = 0;
+            audioBeep.play().catch(e => console.log('Beep播放失败', e));
         }
 
         function stopTimer() {
@@ -634,8 +694,16 @@
             document.getElementById('endTime').textContent = '';
             document.getElementById('timeDisplay').classList.add('finished');
 
-            // 开始循环播放声音
-            playAlarm();
+            // 播放钢琴结束音，然后循环播放闹铃
+            if (audioPianoEnd) {
+                audioPianoEnd.currentTime = 0;
+                audioPianoEnd.play().catch(e => console.log('Piano end播放失败', e));
+                audioPianoEnd.onended = () => {
+                    playAlarm();
+                };
+            } else {
+                playAlarm();
+            }
         }
 
         // ========= 停止所有 =========
@@ -685,55 +753,74 @@
             }
         }
 
+        // 预加载音频
+        let audioCat = null;
+        let audioBird = null;
+        let audioBeep = null;
+        let audioPianoEnd = null;
+        let lastPlayedPercent = 100; // 记录上次播放的百分比
+        let isPlayingSpecialSound = false; // 是否正在播放特殊声音
+
+        function preloadAudio() {
+            audioCat = new Audio('sounds/cat.mp3');
+            audioBird = new Audio('sounds/bird.mp3');
+            audioBeep = new Audio('sounds/beep.mp3');
+            audioPianoEnd = new Audio('sounds/piano-end.mp3');
+            
+            audioCat.load();
+            audioBird.load();
+            audioBeep.load();
+            audioPianoEnd.load();
+        }
+        preloadAudio();
+
         function playBeep() {
+            // 循环闹铃使用备用方案（滴滴滴滴）
+            playBeepFallback();
+        }
+
+        // 备用方案：Web Audio API
+        function playBeepFallback() {
             initAudioContext();
             if (!audioContext) return;
 
             try {
-                // 如果音频上下文被暂停，恢复它
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
 
-                // 传统"滴滴滴滴-滴滴滴滴-"节奏
-                // 4声短促 + 停顿 + 4声短促
-                const beepDuration = 0.08;  // 每声持续时间
-                const beepGap = 0.12;       // 声音间隔
-                const groupGap = 0.3;       // 两组之间的停顿
-                const frequency = 1000;     // 频率（Hz）
+                const beepDuration = 0.15;
+                const beepGap = 0.22;
+                const groupGap = 0.4;
 
                 function playOneBeep(startTime) {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-
-                    oscillator.frequency.value = frequency;
-                    oscillator.type = 'square'; // 方波，更像传统蜂鸣器
-
-                    gainNode.gain.setValueAtTime(0.3, startTime);
-                    gainNode.gain.setValueAtTime(0, startTime + beepDuration);
-
-                    oscillator.start(startTime);
-                    oscillator.stop(startTime + beepDuration);
+                    const frequencies = [659, 880];
+                    frequencies.forEach((freq, idx) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        oscillator.frequency.value = freq;
+                        oscillator.type = 'sine';
+                        const volume = idx === 0 ? 0.25 : 0.12;
+                        gainNode.gain.setValueAtTime(0, startTime);
+                        gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.015);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + beepDuration);
+                        oscillator.start(startTime);
+                        oscillator.stop(startTime + beepDuration);
+                    });
                 }
 
                 const now = audioContext.currentTime;
-                
-                // 第一组：滴滴滴滴
                 for (let i = 0; i < 4; i++) {
                     playOneBeep(now + i * beepGap);
                 }
-                
-                // 第二组：滴滴滴滴（间隔后）
                 const secondGroupStart = 4 * beepGap + groupGap;
                 for (let i = 0; i < 4; i++) {
                     playOneBeep(now + secondGroupStart + i * beepGap);
                 }
-
             } catch (e) {
-                console.log('播放声音失败', e);
+                console.log('备用声音也失败', e);
             }
         }
 
