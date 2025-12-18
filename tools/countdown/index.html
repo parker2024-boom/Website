@@ -416,7 +416,6 @@
     </div>
 
     <div class="control-section">
-        <button class="test-btn" onclick="startCountdown(5/60)">测试 5 秒 / 5 sec</button>
         <button class="stop-btn" onclick="stopAll()">停止 Stop</button>
     </div>
 
@@ -750,16 +749,8 @@
             document.getElementById('endTime').textContent = '';
             document.getElementById('timeDisplay').classList.add('finished');
 
-            // 播放钢琴结束音，然后循环播放闹铃
-            if (audioPianoEnd) {
-                audioPianoEnd.currentTime = 0;
-                audioPianoEnd.play().catch(e => console.log('Piano end播放失败', e));
-                audioPianoEnd.onended = () => {
-                    playAlarm();
-                };
-            } else {
-                playAlarm();
-            }
+            // 直接播放合成音效闹铃
+            playAlarm();
         }
 
         // ========= 停止所有 =========
@@ -813,7 +804,6 @@
         let audioCat = null;
         let audioBird = null;
         let audioBeep = null;
-        let audioPianoEnd = null;
         let lastPlayedPercent = 100; // 记录上次播放的百分比
         let isPlayingSpecialSound = false; // 是否正在播放特殊声音
 
@@ -821,24 +811,28 @@
             audioCat = new Audio('sounds/cat.mp3');
             audioBird = new Audio('sounds/bird.mp3');
             audioBeep = new Audio('sounds/beep.mp3');
-            audioPianoEnd = new Audio('sounds/piano-end.mp3');
             
             audioCat.load();
             audioBird.load();
             audioBeep.load();
-            audioPianoEnd.load();
         }
         preloadAudio();
 
         function playBeep() {
             // 循环闹铃使用备用方案（滴滴滴滴）
+            console.log('playBeep called');
             playBeepFallback();
         }
 
         // 备用方案：Web Audio API
         function playBeepFallback() {
+            console.log('playBeepFallback called, audioContext:', audioContext);
             initAudioContext();
-            if (!audioContext) return;
+            if (!audioContext) {
+                console.error('audioContext is null after init');
+                return;
+            }
+            console.log('audioContext state:', audioContext.state);
 
             try {
                 if (audioContext.state === 'suspended') {
