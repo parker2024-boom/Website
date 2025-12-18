@@ -138,43 +138,72 @@
             background: #e53935;
         }
 
-        /* 预设按钮网格 */
-        .preset-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+        /* 预设按钮区域 */
+        .preset-section {
             margin-bottom: 20px;
         }
 
+        .preset-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preset-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ccc, transparent);
+            margin: 15px 0;
+        }
+
         .preset-btn {
-            padding: 18px 10px;
+            padding: 14px 8px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             text-align: center;
             line-height: 1.3;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
         .preset-btn:active {
             transform: scale(0.96);
         }
 
-        .preset-btn:nth-child(1) { background: #FFB3BA; }
-        .preset-btn:nth-child(2) { background: #FFDFBA; }
-        .preset-btn:nth-child(3) { background: #FFFFBA; }
-        .preset-btn:nth-child(4) { background: #BAFFC9; }
-        .preset-btn:nth-child(5) { background: #BAE1FF; }
-        .preset-btn:nth-child(6) { background: #E0BBFF; }
+        /* 秒级按钮颜色 */
+        .preset-grid.seconds .preset-btn:nth-child(1) { background: #E8F5E9; }
+        .preset-grid.seconds .preset-btn:nth-child(2) { background: #E3F2FD; }
+        .preset-grid.seconds .preset-btn:nth-child(3) { background: #FFF3E0; }
+        .preset-grid.seconds .preset-btn:nth-child(4) { background: #F3E5F5; }
+        .preset-grid.seconds .preset-btn:nth-child(5) { background: #E0F7FA; }
+        .preset-grid.seconds .preset-btn:nth-child(6) { background: #FBE9E7; }
+
+        /* 分钟级按钮颜色 */
+        .preset-grid.minutes .preset-btn:nth-child(1) { background: #FFB3BA; }
+        .preset-grid.minutes .preset-btn:nth-child(2) { background: #FFDFBA; }
+        .preset-grid.minutes .preset-btn:nth-child(3) { background: #FFFFBA; }
+        .preset-grid.minutes .preset-btn:nth-child(4) { background: #BAFFC9; }
+        .preset-grid.minutes .preset-btn:nth-child(5) { background: #BAE1FF; }
+        .preset-grid.minutes .preset-btn:nth-child(6) { background: #E0BBFF; }
+        .preset-grid.minutes .preset-btn:nth-child(7) { background: #FFCCE5; }
+        .preset-grid.minutes .preset-btn:nth-child(8) { background: #D4E6F1; }
+        .preset-grid.minutes .preset-btn:nth-child(9) { background: #FCE4EC; }
 
         .preset-btn .key-hint {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
             display: block;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
         /* 控制按钮 */
@@ -375,8 +404,15 @@
         <div class="progress-bar" id="progressBar"></div>
     </div>
 
-    <div class="preset-grid" id="presetGrid">
-        <!-- 预设按钮由JS生成 -->
+    <div class="preset-section">
+        <div class="preset-label">快捷倒计时 Quick Timer</div>
+        <div class="preset-grid seconds" id="presetGridSeconds">
+            <!-- 秒级按钮由JS生成 -->
+        </div>
+        <div class="preset-divider"></div>
+        <div class="preset-grid minutes" id="presetGridMinutes">
+            <!-- 分钟级按钮由JS生成 -->
+        </div>
     </div>
 
     <div class="control-section">
@@ -388,8 +424,8 @@
     <div class="modal-overlay" id="settingsModal">
         <div class="modal">
             <h2>按键时间设置 · Preset durations</h2>
-            <p>请设置 6 个快捷倒计时时长（单位：分钟，支持小数如 0.5 或分数如 1/2）<br>
-            Please set the six quick countdown durations (unit: minutes)</p>
+            <p>请设置 9 个快捷倒计时时长（单位：分钟，支持小数如 0.5 或分数如 1/2）<br>
+            Please set the nine quick countdown durations (unit: minutes)</p>
             <div id="settingsInputs">
                 <!-- 由JS生成 -->
             </div>
@@ -414,11 +450,16 @@
     </div>
 
     <script>
-        // ========= 状态变量 =========
-        let presetMinutes = [1, 2, 3, 5, 10, 15];
-        let timerRunning = false;
-        let remainingSeconds = 0;
+        // 预设时间（分钟）
+        // 秒级预设（无快捷键）
+        let presetSeconds = [10/60, 20/60, 30/60, 40/60, 50/60, 1.5];
+        // 分钟级预设（有快捷键1-9）
+        let presetMinutes = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+        // 计时器状态
         let totalSeconds = 0;
+        let remainingSeconds = 0;
+        let timerRunning = false;
         let timerId = null;
         let endTimeStr = '';
 
@@ -460,9 +501,9 @@
                     return; // 设置弹窗打开时不响应其他快捷键
                 }
 
-                // 正常快捷键 1-6
+                // 正常快捷键 1-9（对应分钟级预设）
                 const key = parseInt(e.key);
-                if (key >= 1 && key <= 6) {
+                if (key >= 1 && key <= 9) {
                     startCountdown(presetMinutes[key - 1]);
                 }
                 if (e.key === 'Escape' || e.key === ' ') {
@@ -487,7 +528,7 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     const data = JSON.parse(saved);
-                    if (Array.isArray(data) && data.length === 6 && data.every(x => typeof x === 'number' && x > 0)) {
+                    if (Array.isArray(data) && data.length === 9 && data.every(x => typeof x === 'number' && x > 0)) {
                         presetMinutes = data;
                     }
                 }
@@ -506,10 +547,11 @@
 
         // ========= 渲染预设按钮 =========
         function renderPresetButtons() {
-            const grid = document.getElementById('presetGrid');
-            grid.innerHTML = '';
+            // 渲染秒级按钮（无快捷键）
+            const gridSeconds = document.getElementById('presetGridSeconds');
+            gridSeconds.innerHTML = '';
 
-            presetMinutes.forEach((minutes, index) => {
+            presetSeconds.forEach((minutes) => {
                 const btn = document.createElement('button');
                 btn.className = 'preset-btn';
                 btn.onclick = () => startCountdown(minutes);
@@ -517,13 +559,27 @@
                 // 格式化显示
                 let displayText;
                 if (minutes >= 1) {
-                    displayText = minutes === Math.floor(minutes) ? `${minutes} min` : `${minutes.toFixed(1)} min`;
+                    displayText = `${minutes} min`;
                 } else {
                     displayText = `${Math.round(minutes * 60)} sec`;
                 }
 
+                btn.innerHTML = displayText;
+                gridSeconds.appendChild(btn);
+            });
+
+            // 渲染分钟级按钮（有快捷键1-8）
+            const gridMinutes = document.getElementById('presetGridMinutes');
+            gridMinutes.innerHTML = '';
+
+            presetMinutes.forEach((minutes, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'preset-btn';
+                btn.onclick = () => startCountdown(minutes);
+
+                const displayText = `${minutes} min`;
                 btn.innerHTML = `${displayText}<span class="key-hint">按键 ${index + 1}</span>`;
-                grid.appendChild(btn);
+                gridMinutes.appendChild(btn);
             });
         }
 
@@ -865,7 +921,7 @@
         function saveSettings() {
             const newValues = [];
 
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 9; i++) {
                 const input = document.getElementById(`setting_${i}`);
                 const val = parseMinutes(input.value);
 
