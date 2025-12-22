@@ -807,7 +807,8 @@
                 const now = Date.now();
                 const timeSinceLastBeep = (now - lastBeepTime) / 1000;
                 
-                if (currentPercent <= targetPercent && targetPercent >= 0 && timeSinceLastBeep >= 10) {
+                // 跳过10%和20%的beep（这些时间段有猫叫和鸟叫）
+                if (currentPercent <= targetPercent && targetPercent >= 30 && timeSinceLastBeep >= 10) {
                     lastPlayedPercent = targetPercent;
                     lastBeepTime = now;
                     playBeepOnce();
