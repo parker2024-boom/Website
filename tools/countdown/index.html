@@ -813,8 +813,6 @@
         }
 
         // 检查并播放声音提示
-        let lastBeepTime = 0; // 记录上次Beep的时间戳
-        
         function checkAndPlaySound() {
             // 剩余20秒时播放鸟叫
             if (remainingSeconds === 20 && totalSeconds > 20) {
@@ -826,22 +824,6 @@
             if (remainingSeconds === 10 && totalSeconds > 10) {
                 playSpecialSound(audioCat);
                 return;
-            }
-            
-            // 每少10%时播放Beep（除非正在播放其他声音）
-            // 条件：总时间>=30秒 且 距离上次Beep至少10秒
-            if (totalSeconds >= 30 && !isPlayingSpecialSound) {
-                const currentPercent = Math.floor((remainingSeconds / totalSeconds) * 100);
-                const targetPercent = Math.floor(lastPlayedPercent / 10) * 10 - 10;
-                const now = Date.now();
-                const timeSinceLastBeep = (now - lastBeepTime) / 1000;
-                
-                // 跳过10%和20%的beep（这些时间段有猫叫和鸟叫）
-                if (currentPercent <= targetPercent && targetPercent >= 30 && timeSinceLastBeep >= 10) {
-                    lastPlayedPercent = targetPercent;
-                    lastBeepTime = now;
-                    playBeepOnce();
-                }
             }
         }
 
