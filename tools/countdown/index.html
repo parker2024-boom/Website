@@ -293,7 +293,13 @@
             background: #f0f0f0;
         }
 
+        .control-row {
+            display: flex;
+            gap: 10px;
+        }
+
         .stop-btn {
+            flex: 2;
             padding: 16px;
             background: #ff6666;
             color: white;
@@ -307,6 +313,24 @@
 
         .stop-btn:active {
             background: #ff4d4d;
+        }
+
+        .repeat-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: #4a90d9;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            line-height: 1.3;
+        }
+
+        .repeat-btn:active {
+            background: #3a7bc8;
         }
 
         /* 设置弹窗 */
@@ -470,7 +494,10 @@
     </div>
 
     <div class="control-section">
-        <button class="stop-btn" id="stopBtn">停止计时 Stop</button>
+        <div class="control-row">
+            <button class="stop-btn" onclick="stopAll()">停止计时 Stop</button>
+            <button class="repeat-btn" onclick="repeatLast()">重复上次<br>Repeat</button>
+        </div>
     </div>
 
     <div class="preset-section">
@@ -868,26 +895,17 @@
             playAlarm();
         }
 
-        // ========= 停止所有 =========
-        let lastStopClickTime = 0;
-        const DOUBLE_CLICK_THRESHOLD = 400; // 双击间隔阈值（毫秒）
-
-        // 初始化停止按钮的点击事件
-        document.getElementById('stopBtn').addEventListener('click', function() {
-            const now = Date.now();
-            if (now - lastStopClickTime < DOUBLE_CLICK_THRESHOLD && lastSetMinutes > 0) {
-                // 双击：重复上一次倒计时
+        // ========= 重复上次 =========
+        function repeatLast() {
+            if (lastSetMinutes > 0) {
                 stopAlarm();
                 stopTimer();
                 resetToIdle();
                 doStartCountdown(lastSetMinutes);
-            } else {
-                // 单击：停止计时
-                stopAll();
             }
-            lastStopClickTime = now;
-        });
+        }
 
+        // ========= 停止所有 =========
         function stopAll() {
             // 如果正在计时，添加中断记录
             if (timerRunning && totalSeconds > 0) {
