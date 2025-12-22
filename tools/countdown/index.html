@@ -470,7 +470,7 @@
     </div>
 
     <div class="control-section">
-        <button class="stop-btn" onclick="stopAll()">停止计时 Stop</button>
+        <button class="stop-btn" id="stopBtn">停止计时 Stop</button>
     </div>
 
     <div class="preset-section">
@@ -548,6 +548,7 @@
         let endTimeStr = '';
         let startTimeStr = ''; // 记录开始时间
         let currentSetMinutes = 0; // 当前设定的分钟数
+        let lastSetMinutes = 0; // 上一次设定的分钟数（用于双击重复）
 
         // 记录清单
         let completedRecords = [];
@@ -743,6 +744,7 @@
             timerRunning = true;
             lastPlayedPercent = 100; // 重置百分比记录
             currentSetMinutes = minutes; // 记录设定的分钟数
+            lastSetMinutes = minutes; // 保存用于双击重复
 
             // 记录开始时间
             const now = new Date();
@@ -867,6 +869,25 @@
         }
 
         // ========= 停止所有 =========
+        let lastStopClickTime = 0;
+        const DOUBLE_CLICK_THRESHOLD = 400; // 双击间隔阈值（毫秒）
+
+        // 初始化停止按钮的点击事件
+        document.getElementById('stopBtn').addEventListener('click', function() {
+            const now = Date.now();
+            if (now - lastStopClickTime < DOUBLE_CLICK_THRESHOLD && lastSetMinutes > 0) {
+                // 双击：重复上一次倒计时
+                stopAlarm();
+                stopTimer();
+                resetToIdle();
+                doStartCountdown(lastSetMinutes);
+            } else {
+                // 单击：停止计时
+                stopAll();
+            }
+            lastStopClickTime = now;
+        });
+
         function stopAll() {
             // 如果正在计时，添加中断记录
             if (timerRunning && totalSeconds > 0) {
