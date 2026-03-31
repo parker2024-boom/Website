@@ -1,6 +1,6 @@
 {
-  "version": "1.6.1",
-  "installer_url": "https://liguoqun.com/.well-known/aibei/pkg/1.6.1/爱贝设计工作平台_Setup_1.6.1.exe",
-  "sha256": "77c85e5d73bdbf9f7fab4d93087d9d27e6d81854364019236fab3fe404762760",
-  "notes": "\n1、排版时，白色和灰色背景的图片会自动透明化。可在设置中勾选此需求。\n2、不是肖文林、王婷的案例，手术对比数据表会删除SN-U1、L1-MP的行，并下移表格。\n3、修复高级排版时调整上下横线的错误\n4、增加删除图片工具，拖入PPT模板，就会生成空白模板。"
+  "version": "1.6.2",
+  "installer_url": "https://liguoqun.com/.well-known/aibei/pkg/1.6.2/爱贝设计工作平台_Setup_1.6.2.exe",
+  "sha256": "effc1e7071c284165b6e4a2c7f1bf1464f5d2339ce86726e886edaa33ec1204c",
+  "notes": "\n1、查找表格的起始页，可以修改设置，可适配更加少页码的修整下颌、颏成型的模板。\n2、填写表格速度更快\n3、修复：二次操作填入表格，如果没有【SN-U1、L1-MP】行时，表格不会再下移。\n4、修复excel无法切换的问题"
 }
