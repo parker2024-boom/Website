@@ -1,6 +1,6 @@
 {
-  "version": "1.6.4",
-  "installer_url": "https://liguoqun.com/.well-known/aibei/pkg/1.6.4/爱贝设计工作平台_Setup_1.6.4.exe",
-  "sha256": "2db8d0dd7e0f202868beb096e12708ef3524136a45c257fea46ccbf7dbf5d2c8",
-  "notes": "\n1、自动校准牙根点U1-root和L1-root。如果忘了带牙根点匹配过去或缺少牙根点，在导入设计csv时，会自动校准，交能生成牙根的xml，后者可通过点导入替换旧的点。\n2、增加术后分析的导入（需要使用时在设置中勾选）"
+  "version": "1.6.5",
+  "installer_url": "https://liguoqun.com/.well-known/aibei/pkg/1.6.5/爱贝设计工作平台_Setup_1.6.5.exe",
+  "sha256": "b65eb7fd9bad76d197d6c848ae69216336ed1919fcf00f372ea9d775a9d2cab8",
+  "notes": "\n增加术后数据综合分析功能：汇总多个案例的数据，并进行统计学分析，包括：样本量平均值、标准差、P值"
 }
